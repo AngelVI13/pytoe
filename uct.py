@@ -28,7 +28,7 @@ def uct_multi(rootstate_: Board, itermax):
     # for move in moves:
     #     state = rootstate_.__copy__()
     #     state.make_move(move)
-    #     uct(queue, move, state, avg_iters, verbose)
+    #     uct(queue, move, state, avg_iters)
     # time.sleep(0.1)
 
     results = []
