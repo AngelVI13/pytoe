@@ -85,6 +85,8 @@ class Board:
             # any player
             return DRAW
 
+        return None
+
 
 if __name__ == '__main__':
     b = Board()
