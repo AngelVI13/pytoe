@@ -27,7 +27,7 @@ class Board:
 
     def make_move(self, move):
         assert move in self.get_moves(), 'Position is already occupied'
-        assert self.get_result(self.playerJustMoved) is None, 'Can\'t make move, game already finished'
+        # assert self.get_result(self.playerJustMoved) is None, 'Can\'t make move, game already finished'
         self.playerJustMoved = -self.playerJustMoved
 
         self.pos[move] = self.playerJustMoved

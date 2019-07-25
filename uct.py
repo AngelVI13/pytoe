@@ -1,4 +1,5 @@
 import random
+import time
 from multiprocessing import Queue, Process
 from operator import itemgetter
 
@@ -15,25 +16,35 @@ def uct_multi(rootstate_: Board, itermax):
     avg_iters = itermax // len(moves)
     queue = Queue()
 
-    processes = []
-    for move in moves:
-        current_state = rootstate_.__copy__()
-        current_state.make_move(move)
-        p = Process(target=uct, args=(queue, move, current_state, avg_iters))
-        p.start()
-        processes.append(p)
-
-    for process in processes:
-        process.join()
+    # processes = []
     # for move in moves:
-    #     state = rootstate_.__copy__()
-    #     state.make_move(move)
-    #     uct(queue, move, state, avg_iters)
-    # time.sleep(0.1)
+    #     current_state = rootstate_.__copy__()
+    #     current_state.make_move(move)
+    #     p = Process(target=uct, args=(queue, move, current_state, avg_iters))
+    #     p.start()
+    #     processes.append(p)
+    #
+    # for process in processes:
+    #     process.join()
+    for move in moves:
+        state = rootstate_.__copy__()
+        state.make_move(move)
+        # todo add check for immediate result after this make_move()
+        # todo it is likely the game is already over by this point in which the value of the move should
+        # todo be immediately computed
+        result = state.get_result(-state.playerJustMoved)
+        if result is not None:
+            print(state)
+            print(result)
+            queue.put((move, result, 1))
+            continue  # here 1 referes to number of visits
+        uct(queue, move, state, avg_iters)
+    time.sleep(0.1)
 
     results = []
     while not queue.empty():
         move, wins, visits = queue.get()
+        print(f'Move: {move}, score: {wins/visits}')
         results.append((move, wins/visits))
 
     # the score here refers to the score of the best enemy reply -> we choose a move which leads to a best enemy reply
@@ -58,11 +69,27 @@ def uct(queue: Queue, move_origin, rootstate, itermax):
         node = rootnode
         moves_to_root = 0
 
+        game_over = False
         # Select
         while not node.untriedMoves and node.childNodes:  # node is fully expanded and non-terminal
             node = node.uct_select_child()
             state.make_move(node.move)
             moves_to_root += 1
+            if state.get_result(state.playerJustMoved) is not None:
+                # Backpropagate
+                while node is not None:  # backpropagate from the expanded node and work back to the root node
+                    # state is terminal. Update node with result from POV of node.playerJustMoved
+                    result = state.get_result(node.playerJustMoved)
+                    node.update(result)
+                    node = node.parentNode
+
+                for _ in range(moves_to_root):
+                    state.take_move()
+
+                game_over = True
+                break
+        if game_over:
+            continue
 
         # Expand
         if node.untriedMoves:  # if we can expand (i.e. state/node is non-terminal)
@@ -92,4 +119,4 @@ def uct(queue: Queue, move_origin, rootstate, itermax):
 
 if __name__ == '__main__':
     b = Board()
-    print(uct_multi(b, itermax=50000))
+    print(uct_multi(b, itermax=20))
