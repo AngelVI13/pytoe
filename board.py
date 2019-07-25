@@ -43,7 +43,10 @@ class Board:
         self.playerJustMoved = -self.playerJustMoved
 
     def get_moves(self):
-        return [idx for idx, value in enumerate(self.pos) if value == NO_PLAYER]
+        if self.get_result(self.playerJustMoved) is None:
+            return [idx for idx, value in enumerate(self.pos) if value == NO_PLAYER]
+        else:
+            return []
 
     def get_result(self, player_jm):
         cols_combo = [self.pos[i::ROWS] for i in range(ROWS)]

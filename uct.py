@@ -29,13 +29,12 @@ def uct_multi(rootstate_: Board, itermax):
     for move in moves:
         state = rootstate_.__copy__()
         state.make_move(move)
-        # todo add check for immediate result after this make_move()
-        # todo it is likely the game is already over by this point in which the value of the move should
-        # todo be immediately computed
+        # Check for immediate result after this make_move()
+        # It is possible the game is already over by this point in which the value of the move should
+        # be immediately computed and put in the result from the vue point of the enemy
+        # since later moves are evaluated from that viewpoint
         result = state.get_result(-state.playerJustMoved)
         if result is not None:
-            print(state)
-            print(result)
             queue.put((move, result, 1))
             continue  # here 1 referes to number of visits
         uct(queue, move, state, avg_iters)
@@ -69,27 +68,11 @@ def uct(queue: Queue, move_origin, rootstate, itermax):
         node = rootnode
         moves_to_root = 0
 
-        game_over = False
         # Select
-        while not node.untriedMoves and node.childNodes:  # node is fully expanded and non-terminal
+        while node.untriedMoves == [] and node.childNodes != []:  # node is fully expanded and non-terminal
             node = node.uct_select_child()
             state.make_move(node.move)
             moves_to_root += 1
-            if state.get_result(state.playerJustMoved) is not None:
-                # Backpropagate
-                while node is not None:  # backpropagate from the expanded node and work back to the root node
-                    # state is terminal. Update node with result from POV of node.playerJustMoved
-                    result = state.get_result(node.playerJustMoved)
-                    node.update(result)
-                    node = node.parentNode
-
-                for _ in range(moves_to_root):
-                    state.take_move()
-
-                game_over = True
-                break
-        if game_over:
-            continue
 
         # Expand
         if node.untriedMoves:  # if we can expand (i.e. state/node is non-terminal)
