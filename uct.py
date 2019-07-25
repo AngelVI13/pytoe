@@ -43,7 +43,7 @@ def uct_multi(rootstate_: Board, itermax):
     results = []
     while not queue.empty():
         move, wins, visits = queue.get()
-        print(f'Move: {move}, score: {wins/visits}')
+        print(f'Move: {move}, score: {wins/visits}, visits: {visits} from {avg_iters}')
         results.append((move, wins/visits))
 
     # the score here refers to the score of the best enemy reply -> we choose a move which leads to a best enemy reply
