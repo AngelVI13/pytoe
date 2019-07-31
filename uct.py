@@ -16,29 +16,33 @@ def uct_multi(rootstate_: Board, itermax):
     avg_iters = itermax // len(moves)
     queue = Queue()
 
-    # processes = []
-    # for move in moves:
-    #     current_state = rootstate_.__copy__()
-    #     current_state.make_move(move)
-    #     p = Process(target=uct, args=(queue, move, current_state, avg_iters))
-    #     p.start()
-    #     processes.append(p)
-    #
-    # for process in processes:
-    #     process.join()
+    processes = []
     for move in moves:
-        state = rootstate_.__copy__()
-        state.make_move(move)
-        # Check for immediate result after this make_move()
-        # It is possible the game is already over by this point in which the value of the move should
-        # be immediately computed and put in the result from the vue point of the enemy
-        # since later moves are evaluated from that viewpoint
-        result = state.get_result(-state.playerJustMoved)
+        current_state = rootstate_.__copy__()
+        current_state.make_move(move)
+        result = current_state.get_result(-current_state.playerJustMoved)
         if result is not None:
             queue.put((move, result, 1))
             continue  # here 1 referes to number of visits
-        uct(queue, move, state, avg_iters)
-    time.sleep(0.1)
+        p = Process(target=uct, args=(queue, move, current_state, avg_iters))
+        p.start()
+        processes.append(p)
+
+    for process in processes:
+        process.join()
+    # for move in moves:
+    #     state = rootstate_.__copy__()
+    #     state.make_move(move)
+    #     # Check for immediate result after this make_move()
+    #     # It is possible the game is already over by this point in which the value of the move should
+    #     # be immediately computed and put in the result from the vue point of the enemy
+    #     # since later moves are evaluated from that viewpoint
+    #     result = state.get_result(-state.playerJustMoved)
+    #     if result is not None:
+    #         queue.put((move, result, 1))
+    #         continue  # here 1 referes to number of visits
+    #     uct(queue, move, state, avg_iters)
+    # time.sleep(0.1)
 
     results = []
     while not queue.empty():
@@ -102,4 +106,7 @@ def uct(queue: Queue, move_origin, rootstate, itermax):
 
 if __name__ == '__main__':
     b = Board()
-    print(uct_multi(b, itermax=20))
+    import time
+    start = time.time()
+    print(uct_multi(b, itermax=100000))
+    print(time.time()-start)
